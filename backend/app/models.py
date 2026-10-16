@@ -1,6 +1,7 @@
 from time import timezone
 import uuid
 import datetime
+from sqlalchemy.sql import func
 from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base

@@ -1,7 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException,UploadFile, File, Depends
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from app.db import engine
+from sqlalchemy.orm import Session
+from app.db import get_db
+from app.models import Document
 
 
 app = FastAPI()
@@ -22,3 +25,15 @@ def db_health() :
     except SQLAlchemyError as e:
             print(f"Database connection failed: {e}")
             raise HTTPException(status_code=503, detail="Database connection failed")
+
+@app.post("/api/documents/")
+def upload_documents(file:UploadFile = File(...), db: Session=Depends(get_db)):
+    new_doc = Document(filename =  file.filename)
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+    return {
+            "id": new_doc.id,
+            "filename": new_doc.filename,
+            "status": new_doc.status
+        }
