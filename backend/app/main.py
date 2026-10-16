@@ -5,9 +5,14 @@ from app.db import engine
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import Document
+import os
+import shutil
 
-
+UPLOAD_DIR = "uploads"
 app = FastAPI()
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 
 @app.get("/health")
@@ -32,6 +37,13 @@ def upload_documents(file:UploadFile = File(...), db: Session=Depends(get_db)):
     db.add(new_doc)
     db.commit()
     db.refresh(new_doc)
+
+    base_name,extension = os.path.splitext(file.filename)
+    safe_filename = str(new_doc.id)+extension
+    filepath = os.path.join(UPLOAD_DIR,safe_filename)
+
+    with open(filepath,"wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
     return {
             "id": new_doc.id,
             "filename": new_doc.filename,
