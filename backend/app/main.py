@@ -7,7 +7,7 @@ from app.db import get_db
 from app.models import Document
 import os
 import shutil
-from app.services import extract_text_from_pdf,chunk_text,get_embedding_model
+from app.services import extract_text_from_pdf,chunk_text,get_embedding_model, store_embeddings_in_pinecone
 
 UPLOAD_DIR = "uploads"
 app = FastAPI()
@@ -55,10 +55,13 @@ def upload_documents(file:UploadFile = File(...), db: Session=Depends(get_db)):
     chunks = chunk_text(extracted_text)
     print(f"Split document into {len(chunks)} chunks.")
 
-    embedder = get_embedding_model()
-    sample_vector = embedder.embed_query(chunks[0])
-    print(f"Successfully generated a vector of length {len(sample_vector)}.")
-    
+    # embedder = get_embedding_model()
+    # sample_vector = embedder.embed_query(chunks[0])
+    # print(f"Successfully generated a vector of length {len(sample_vector)}.")
+
+    store_embeddings_in_pinecone(chunks, new_doc.id, new_doc.filename)
+    print("Successfully uploaded vectors to Pinecone.")
+        
     new_doc.status = "completed"
     db.commit()
     
