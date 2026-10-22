@@ -7,6 +7,7 @@ from app.db import get_db
 from app.models import Document
 import os
 import shutil
+from app.services import extract_text_from_pdf
 
 UPLOAD_DIR = "uploads"
 app = FastAPI()
@@ -44,6 +45,12 @@ def upload_documents(file:UploadFile = File(...), db: Session=Depends(get_db)):
 
     with open(filepath,"wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
+    new_doc.status = "processing"
+    db.commit()
+    extracted_text = extract_text_from_pdf(filepath)
+    print(f"Extracted {len(extracted_text)} characters.")
+    new_doc.status = "completed"
+    db.commit()
     return {
             "id": new_doc.id,
             "filename": new_doc.filename,
