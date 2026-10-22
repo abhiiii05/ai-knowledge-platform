@@ -1,4 +1,5 @@
 from pypdf import PdfReader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def extract_text_from_pdf(filepath: str) -> str:
@@ -9,6 +10,14 @@ def extract_text_from_pdf(filepath: str) -> str:
         if text:
             full_text+=text+"\n"
     return full_text
+
+def chunk_text(text:str)-> list[str]:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size = 1000,
+        chunk_overlap = 200,
+        length_function = len
+    )
+    return splitter.split_text(text)
             
     
     
