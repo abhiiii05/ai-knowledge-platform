@@ -1,5 +1,6 @@
 from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
 
 
 def extract_text_from_pdf(filepath: str) -> str:
@@ -18,6 +19,9 @@ def chunk_text(text:str)-> list[str]:
         length_function = len
     )
     return splitter.split_text(text)
+
+def get_embedding_model():
+    return HuggingFaceEmbeddings(model_name ="all-MiniLM-L6-v2")
             
     
     
