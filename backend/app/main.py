@@ -7,12 +7,16 @@ from app.db import get_db
 from app.models import Document
 import os
 import shutil
-from app.services import extract_text_from_pdf,chunk_text,get_embedding_model, store_embeddings_in_pinecone
+from pydantic import BaseModel
+from app.services import extract_text_from_pdf,chunk_text,get_embedding_model, store_embeddings_in_pinecone , search_documents
 
 UPLOAD_DIR = "uploads"
 app = FastAPI()
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+class QueryRequest(BaseModel):
+    query: str
 
 
 
@@ -70,3 +74,14 @@ def upload_documents(file:UploadFile = File(...), db: Session=Depends(get_db)):
             "filename": new_doc.filename,
             "status": new_doc.status
         }
+
+@app.post("/api/search")
+def search_knowledge_base(request: QueryRequest):
+    try:
+        results = search_documents(request.query)
+        return{
+            "query" : request.query,
+            "results" : results          
+        }
+    except Exception as e :
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,9 +1,12 @@
+import re
+
 from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 
+index_name = "knowledge-platform"
 
 def extract_text_from_pdf(filepath: str) -> str:
     full_text = ""
@@ -37,6 +40,23 @@ def store_embeddings_in_pinecone(chunks:list[str],document_id:str, filename:str)
         index_name=index_name,
         metadatas=metadatas
     )
-            
-    
+
+def search_documents(query : str, top_k: int = 3) -> list[dict]:
+    embedder = get_embedding_model()
+    index_name = "knowledge-platform"
+
+    vectorstore = PineconeVectorStore(
+        index_name = index_name,
+        embedding = embedder
+    )
+
+    results = vectorstore.similarity_search(query,k=top_k)
+
+    formatted_results = []
+    for doc in results:
+        formatted_results.append({
+            "content" : doc.page_content,
+            "source" : doc.metadata.get("filename", "Unknown")
+        })
+    return formatted_results
     
