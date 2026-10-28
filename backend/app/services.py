@@ -6,7 +6,9 @@ from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
+from functools import lru_cache
 
 index_name = "knowledge-platform"
 
@@ -27,9 +29,11 @@ def chunk_text(text:str)-> list[str]:
     )
     return splitter.split_text(text)
 
+@lru_cache(maxsize=1)
 def get_embedding_model():
-    return HuggingFaceEmbeddings(model_name ="all-MiniLM-L6-v2")
-
+    print("INITIALIZING: Connecting to Google Cloud Embeddings (3072-dim)...")
+    return GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
+    
 def store_embeddings_in_pinecone(chunks:list[str],document_id:str, filename:str):
     embedder =get_embedding_model()
     index_name = "knowledge-platform"
