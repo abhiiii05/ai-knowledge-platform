@@ -8,7 +8,7 @@ from app.models import Document
 import os
 import shutil
 from pydantic import BaseModel
-from app.services import extract_text_from_pdf,chunk_text,get_embedding_model, store_embeddings_in_pinecone , search_documents
+from app.services import extract_text_from_pdf,chunk_text, generate_answer,get_embedding_model, store_embeddings_in_pinecone , search_documents, generate_answer
 
 UPLOAD_DIR = "uploads"
 app = FastAPI()
@@ -79,8 +79,10 @@ def upload_documents(file:UploadFile = File(...), db: Session=Depends(get_db)):
 def search_knowledge_base(request: QueryRequest):
     try:
         results = search_documents(request.query)
+        generated_answer = generate_answer(request.query, results )
         return{
             "query" : request.query,
+            "answer" : generated_answer,
             "results" : results          
         }
     except Exception as e :

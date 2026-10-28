@@ -1,10 +1,12 @@
 import re
-
 from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
+import os
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import PromptTemplate
 
 index_name = "knowledge-platform"
 
@@ -59,4 +61,34 @@ def search_documents(query : str, top_k: int = 3) -> list[dict]:
             "source" : doc.metadata.get("filename", "Unknown")
         })
     return formatted_results
-    
+
+def generate_answer(query : str, retrieved_chunks: list[dict])-> str:
+    context_text = "\n\n---\n\n".join([chunk["content"] for chunk in retrieved_chunks])
+
+    llm = ChatGoogleGenerativeAI(
+            model="gemini-flash-latest",
+            api_key=os.getenv("GOOGLE_API_KEY")
+    )
+
+    prompt = PromptTemplate(
+            template="""You are a helpful technical assistant. Use ONLY the provided context to answer the user's question.
+            If the answer is not in the context, say "I cannot answer this based on the provided documents."
+
+            Context:
+            {context}
+
+            Question:
+            {question}
+
+            Answer:""",
+            input_variables=["context", "question"]
+    )
+
+    chain = prompt | llm
+    response = chain.invoke({"context": context_text, "question": query})
+
+    if isinstance(response.content, list):
+            return response.content[0].get("text", "")
+    return response.content
+
+    return response.content
