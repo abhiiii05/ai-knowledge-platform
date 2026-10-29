@@ -5,7 +5,8 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 import os
-from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from functools import lru_cache
@@ -69,10 +70,10 @@ def search_documents(query : str, top_k: int = 3) -> list[dict]:
 def generate_answer(query : str, retrieved_chunks: list[dict])-> str:
     context_text = "\n\n---\n\n".join([chunk["content"] for chunk in retrieved_chunks])
 
-    llm = ChatGoogleGenerativeAI(
-            model="gemini-flash-latest",
-            api_key=os.getenv("GOOGLE_API_KEY")
-    )
+    llm = ChatGroq(
+            model="qwen/qwen3.8-27b",
+            api_key=os.getenv("GROQ_API_KEY")
+        )
 
     prompt = PromptTemplate(
             template="""You are a helpful technical assistant. Use ONLY the provided context to answer the user's question.
