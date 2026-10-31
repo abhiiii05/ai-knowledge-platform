@@ -1,6 +1,7 @@
 import re
 from pypdf import PdfReader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+# from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
 from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
@@ -23,11 +24,14 @@ def extract_text_from_pdf(filepath: str) -> str:
     return full_text
 
 def chunk_text(text:str)-> list[str]:
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 1000,
-        chunk_overlap = 200,
-        length_function = len
-    )
+    # splitter = RecursiveCharacterTextSplitter(
+    #     chunk_size = 1000,
+    #     chunk_overlap = 200,
+    #     length_function = len
+    # 
+    # )
+    embedder = get_embedding_model()
+    splitter = SemanticChunker(embedder)
     return splitter.split_text(text)
 
 @lru_cache(maxsize=1)
